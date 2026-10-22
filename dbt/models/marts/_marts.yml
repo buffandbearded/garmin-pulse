@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: fct_daily_health
+    columns:
+      - name: calendar_date
+        tests: [unique, not_null]
+  - name: fct_workouts
+    columns:
+      - name: activity_id
+        tests: [unique, not_null]
+  - name: fct_weekly_summary
+    columns:
+      - name: week_start
+        tests: [unique, not_null]
