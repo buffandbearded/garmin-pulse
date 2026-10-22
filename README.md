@@ -29,7 +29,7 @@ More detail in [docs/architecture.md](docs/architecture.md).
 |---|---|
 | Ingestion | Python, `garminconnect`, psycopg2 |
 | Warehouse | PostgreSQL 16 (`raw`, `staging`, `marts`) |
-| Transformation | dbt (postgres adapter): 7 models, 14 tests |
+| Transformation | dbt (postgres adapter): 7 models, 26 tests incl. custom SQL tests and source freshness |
 | Orchestration | Apache Airflow 2.10 (LocalExecutor) |
 | Dashboard | Streamlit, Plotly |
 | Infra | Docker Compose |
