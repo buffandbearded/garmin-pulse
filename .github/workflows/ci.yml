@@ -38,3 +38,44 @@ jobs:
           POSTGRES_DB: ci
           POSTGRES_HOST: localhost
         run: dbt parse
+
+  s3-integration:
+    runs-on: ubuntu-latest
+    services:
+      aws:
+        image: hectorvent/floci:latest
+        ports:
+          - 4566:4566
+    env:
+      AWS_ENDPOINT_URL: http://localhost:4566
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_REGION: eu-central-1
+      S3_BUCKET: garmin-pulse-raw
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Wait for emulator
+        run: |
+          for i in $(seq 1 30); do
+            curl -s http://localhost:4566 > /dev/null && exit 0
+            sleep 2
+          done
+          echo "emulator did not start" && exit 1
+
+      - name: Terraform apply (against emulator)
+        working-directory: infra/terraform
+        run: |
+          terraform init
+          terraform apply -auto-approve -var endpoint_url=http://localhost:4566
+
+      - name: Integration tests
+        run: |
+          pip install pytest boto3 python-dotenv
+          PYTHONPATH=ingestion pytest tests -q
