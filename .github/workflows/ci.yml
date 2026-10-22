@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tooling
+        run: pip install ruff dbt-postgres
+
+      - name: Ruff (lint)
+        run: ruff check ingestion dashboard airflow/dags
+
+      - name: Compile Python
+        run: python -m compileall -q ingestion dashboard airflow/dags
+
+      - name: Validate docker-compose
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
+
+      - name: dbt parse
+        working-directory: dbt
+        env:
+          DBT_PROFILES_DIR: .
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+          POSTGRES_HOST: localhost
+        run: dbt parse

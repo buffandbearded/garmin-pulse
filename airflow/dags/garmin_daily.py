@@ -1,8 +1,9 @@
 """Daily Garmin pipeline: ingest raw JSON -> dbt build (staging + marts)."""
 from datetime import datetime, timedelta
 
-from airflow import DAG
 from airflow.operators.bash import BashOperator
+
+from airflow import DAG
 
 default_args = {
     "owner": "kristijan",
