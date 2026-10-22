@@ -1,3 +1,25 @@
+x-airflow-common: &airflow-common
+  build: ./airflow
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/airflow
+    AIRFLOW__WEBSERVER__SECRET_KEY: garmin-pulse-local-secret
+    POSTGRES_HOST: postgres
+    POSTGRES_USER: ${POSTGRES_USER}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    POSTGRES_DB: ${POSTGRES_DB}
+    DBT_PROFILES_DIR: /opt/airflow/dbt
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./ingestion:/opt/airflow/ingestion
+    - ./dbt:/opt/airflow/dbt
+    - ./.garmin_tokens:/opt/airflow/.garmin_tokens
+    - airflow_logs:/opt/airflow/logs
+  depends_on:
+    postgres:
+      condition: service_healthy
+
 services:
   postgres:
     image: postgres:16
@@ -32,5 +54,25 @@ services:
     volumes:
       - ./dbt:/usr/app/dbt
 
+  airflow-init:
+    <<: *airflow-common
+    command: >
+      bash -c "airflow db migrate &&
+      airflow users create --username admin --password admin
+      --firstname Kristijan --lastname S --role Admin --email sk.kristijan@gmail.com || true"
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    restart: unless-stopped
+
 volumes:
   pgdata:
+  airflow_logs:
