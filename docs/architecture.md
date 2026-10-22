@@ -2,14 +2,18 @@
 
 ```mermaid
 flowchart LR
-    G[Garmin Connect API] -->|garminconnect, token-cached| I[Python ingestion]
-    I -->|idempotent upserts, JSONB| R[(Postgres raw)]
-    R --> S[dbt staging views]
-    S --> M[dbt marts tables]
+    G[Garmin Connect API] -->|garminconnect| I[Python ingestion]
+    I -->|raw JSON| L[(S3 data lake)]
+    TF[Terraform] -. provisions .-> L
+    L -->|load_from_s3| R[(Postgres raw)]
+    R --> S[dbt staging]
+    S --> M[dbt marts]
     M --> D[Streamlit dashboard]
-    A{{Airflow DAG: garmin_daily}} -. schedules .-> I
+    M --> API[FastAPI]
+    A{{Airflow: garmin_daily}} -. schedules .-> I
+    A -. schedules .-> R
     A -. schedules .-> S
-    CI[GitHub Actions CI] -. lint, compose check, dbt parse .-> Repo[(GitHub repo)]
+    CI[GitHub Actions CI] -. lint, terraform apply, S3 tests .-> Repo[(GitHub repo)]
 ```
 
 ## Layers
