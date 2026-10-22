@@ -1,4 +1,4 @@
-"""Daily Garmin pipeline: ingest raw JSON -> dbt build (staging + marts)."""
+"""Daily Garmin pipeline: ingest to S3 -> load to Postgres -> dbt build."""
 from datetime import datetime, timedelta
 
 from airflow.operators.bash import BashOperator
@@ -13,7 +13,7 @@ default_args = {
 
 with DAG(
     dag_id="garmin_daily",
-    description="Ingest Garmin data into raw.*, then build dbt models",
+    description="Garmin API -> S3 data lake -> Postgres raw -> dbt models",
     default_args=default_args,
     start_date=datetime(2026, 10, 1),
     schedule="0 6 * * *",
@@ -31,6 +31,11 @@ with DAG(
         ),
     )
 
+    load = BashOperator(
+        task_id="load_to_postgres",
+        bash_command="cd /opt/airflow/ingestion && python load_from_s3.py --days 3",
+    )
+
     dbt_build = BashOperator(
         task_id="dbt_build",
         bash_command=(
@@ -40,4 +45,4 @@ with DAG(
         ),
     )
 
-    ingest >> dbt_build
+    ingest >> load >> dbt_build
