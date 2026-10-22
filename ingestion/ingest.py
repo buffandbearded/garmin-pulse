@@ -1,4 +1,4 @@
-"""Pull Garmin data for a date range into raw.* tables (idempotent).
+"""Pull Garmin data for a date range: raw JSON to S3, then into raw.* tables.
 
 Usage:
   python ingestion/ingest.py --days 3
@@ -10,6 +10,7 @@ from datetime import date, timedelta
 
 from db import get_conn, init_schema, upsert_activities, upsert_daily
 from garmin_auth import get_client
+from lake import get_s3, put_activities, put_json
 
 PAUSE = 0.7  # seconds between API calls, to stay under rate limits
 
@@ -34,6 +35,7 @@ def main():
         p.error("give --days N or --start YYYY-MM-DD")
 
     client = get_client()
+    s3 = get_s3()
     conn = get_conn()
     init_schema(conn)
 
@@ -50,6 +52,7 @@ def main():
             try:
                 payload = fn(day)
                 if payload:
+                    put_json(s3, table, day, payload)
                     upsert_daily(conn, table, day, payload)
                     ok += 1
             except Exception as e:
@@ -61,6 +64,7 @@ def main():
 
     try:
         acts = client.get_activities_by_date(start.isoformat(), end.isoformat())
+        put_activities(s3, acts)
         n = upsert_activities(conn, acts)
         print(f"activities: {n} upserted")
     except Exception as e:
