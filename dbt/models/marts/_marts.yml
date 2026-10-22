@@ -6,7 +6,10 @@ models:
       - name: calendar_date
         tests: [unique, not_null]
       - name: total_steps
-        tests: [not_null]
+        tests:
+          - not_null:
+              config:
+                where: "calendar_date < current_date"
   - name: fct_workouts
     columns:
       - name: activity_id

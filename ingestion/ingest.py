@@ -1,4 +1,6 @@
-"""Pull Garmin data for a date range: raw JSON to S3, then into raw.* tables.
+"""Pull Garmin data for a date range into the S3 data lake (raw JSON).
+
+Loading into Postgres is done separately by load_from_s3.py.
 
 Usage:
   python ingestion/ingest.py --days 3
@@ -8,7 +10,6 @@ import argparse
 import time
 from datetime import date, timedelta
 
-from db import get_conn, init_schema, upsert_activities, upsert_daily
 from garmin_auth import get_client
 from lake import get_s3, put_activities, put_json
 
@@ -36,8 +37,6 @@ def main():
 
     client = get_client()
     s3 = get_s3()
-    conn = get_conn()
-    init_schema(conn)
 
     fetchers = {
         "daily_summary": client.get_user_summary,
@@ -48,31 +47,25 @@ def main():
     ok = failed = 0
     for d in daterange(start, end):
         day = d.isoformat()
-        for table, fn in fetchers.items():
+        for name, fn in fetchers.items():
             try:
                 payload = fn(day)
                 if payload:
-                    put_json(s3, table, day, payload)
-                    upsert_daily(conn, table, day, payload)
+                    put_json(s3, name, day, payload)
                     ok += 1
             except Exception as e:
                 failed += 1
-                conn.rollback()
-                print(f"[WARN] {table} {day}: {type(e).__name__}: {e}")
+                print(f"[WARN] {name} {day}: {type(e).__name__}: {e}")
             time.sleep(PAUSE)
         print(f"{day} done")
 
     try:
         acts = client.get_activities_by_date(start.isoformat(), end.isoformat())
-        put_activities(s3, acts)
-        n = upsert_activities(conn, acts)
-        print(f"activities: {n} upserted")
+        print(f"activities: {put_activities(s3, acts)} written")
     except Exception as e:
         failed += 1
-        conn.rollback()
         print(f"[WARN] activities: {type(e).__name__}: {e}")
 
-    conn.close()
     print(f"Finished. ok={ok} failed={failed}")
 
 
