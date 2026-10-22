@@ -105,6 +105,15 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
 
+  aws:
+    image: ${AWS_EMULATOR_IMAGE:-hectorvent/floci:latest}
+    container_name: garmin_aws
+    restart: unless-stopped
+    environment:
+      LOCALSTACK_AUTH_TOKEN: ${LOCALSTACK_AUTH_TOKEN:-}
+    ports:
+      - "127.0.0.1:4566:4566"
+
 volumes:
   pgdata:
   airflow_logs:

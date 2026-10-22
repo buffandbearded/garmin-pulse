@@ -12,3 +12,7 @@ airflow/logs/
 .vscode/
 .DS_Store
 dbt/.user.yml
+infra/terraform/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
