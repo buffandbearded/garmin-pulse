@@ -19,6 +19,10 @@ flowchart LR
 
 More detail in [docs/architecture.md](docs/architecture.md).
 
+## Dashboard
+
+![Garmin Pulse dashboard](docs/dashboard.png)
+
 ## Stack
 
 | Concern | Tool |
@@ -65,6 +69,11 @@ docker compose up -d                                    # Airflow, dashboard
 | Airflow UI (`admin` / `admin`, local only) | http://localhost:8080 |
 | Postgres | `localhost:5432` |
 
+## API
+
+A read-only FastAPI service over the marts: `GET /health`, `/daily`, `/weekly`, `/workouts`.
+Interactive docs at http://localhost:8000/docs.
+
 ## Project layout
 
 ```
@@ -72,6 +81,7 @@ ingestion/   Garmin auth (token cache), raw loaders
 dbt/         staging and marts models, tests
 airflow/     Dockerfile and the garmin_daily DAG
 dashboard/   Streamlit app
+api/         FastAPI service over the marts
 docker/      Postgres init scripts
 .github/     CI workflow
 ```
@@ -80,4 +90,4 @@ docker/      Postgres init scripts
 
 - All ports bind to `127.0.0.1`. Secrets live in `.env` (git-ignored).
 - Loads are idempotent, so any date range can be re-run safely.
-- Possible next steps: FastAPI layer over the marts, dbt docs hosted on GitHub Pages, data freshness checks.
+- Possible next steps: dbt docs hosted on GitHub Pages, data freshness checks.

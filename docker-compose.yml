@@ -90,6 +90,21 @@ services:
     volumes:
       - ./dashboard:/app
 
+  api:
+    build: ./api
+    container_name: garmin_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "127.0.0.1:8000:8000"
+
 volumes:
   pgdata:
   airflow_logs:

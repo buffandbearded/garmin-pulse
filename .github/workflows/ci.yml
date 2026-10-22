@@ -19,10 +19,10 @@ jobs:
         run: pip install ruff dbt-postgres
 
       - name: Ruff (lint)
-        run: ruff check ingestion dashboard airflow/dags
+        run: ruff check ingestion dashboard airflow/dags api
 
       - name: Compile Python
-        run: python -m compileall -q ingestion dashboard airflow/dags
+        run: python -m compileall -q ingestion dashboard airflow/dags api
 
       - name: Validate docker-compose
         run: |
