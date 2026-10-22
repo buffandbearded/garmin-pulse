@@ -5,10 +5,20 @@ models:
     columns:
       - name: calendar_date
         tests: [unique, not_null]
+      - name: total_steps
+        tests: [not_null]
   - name: fct_workouts
     columns:
       - name: activity_id
         tests: [unique, not_null]
+      - name: activity_type
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [strength_training, overland, open_water_swimming, running, walking, cycling, hiking, other]
+              config:
+                severity: warn
   - name: fct_weekly_summary
     columns:
       - name: week_start
