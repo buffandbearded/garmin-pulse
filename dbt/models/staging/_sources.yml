@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: garmin_daily_summary
+      - name: garmin_sleep
+      - name: garmin_heart_rate
+      - name: garmin_activities

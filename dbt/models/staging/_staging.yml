@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: stg_garmin__daily_summary
+    columns:
+      - name: calendar_date
+        tests: [unique, not_null]
+  - name: stg_garmin__sleep
+    columns:
+      - name: calendar_date
+        tests: [unique, not_null]
+  - name: stg_garmin__heart_rate
+    columns:
+      - name: calendar_date
+        tests: [unique, not_null]
+  - name: stg_garmin__activities
+    columns:
+      - name: activity_id
+        tests: [unique, not_null]
